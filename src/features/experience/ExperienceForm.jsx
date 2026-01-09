@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPaperPlane,
@@ -28,9 +28,15 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
     }
     return "";
   });
-  const [website, setWebsite] = useState("");
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
+
+  const formLoadTime = useRef(Date.now());
+  const honeypotRef = useRef({ website: "", email: "", phone: "" });
+
+  useEffect(() => {
+    formLoadTime.current = Date.now();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, content);
@@ -56,6 +62,10 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
     setError(validation.success ? "" : validation.error || "");
   };
 
+  const handleHoneypotChange = (field) => (e) => {
+    honeypotRef.current[field] = e.target.value;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched(true);
@@ -66,16 +76,36 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
       return;
     }
 
+    const timeSpent = Date.now() - formLoadTime.current;
+
     try {
-      await onSubmit({ content: validation.data, website });
+      await onSubmit({
+        content: validation.data,
+        website: honeypotRef.current.website,
+        email: honeypotRef.current.email,
+        phone: honeypotRef.current.phone,
+        _t: timeSpent,
+      });
       setContent("");
-      setWebsite("");
+      honeypotRef.current = { website: "", email: "", phone: "" };
+      formLoadTime.current = Date.now();
       localStorage.removeItem(STORAGE_KEY);
       setError("");
       setTouched(false);
     } catch (err) {
       setError(err.message || "Failed to submit. Please try again.");
     }
+  };
+
+  const honeypotStyles = {
+    position: "absolute",
+    left: "-9999px",
+    top: "-9999px",
+    opacity: 0,
+    height: 0,
+    width: 0,
+    overflow: "hidden",
+    pointerEvents: "none",
   };
 
   return (
@@ -90,24 +120,36 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="website"
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-            style={{
-              opacity: 0,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              height: 0,
-              width: 0,
-              zIndex: -1,
-            }}
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-          />
+          <div style={honeypotStyles} aria-hidden="true">
+            <label htmlFor="website">Website</label>
+            <input
+              type="text"
+              id="website"
+              name="website"
+              onChange={handleHoneypotChange("website")}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+            <label htmlFor="user_email">Email</label>
+            <input
+              type="email"
+              id="user_email"
+              name="user_email"
+              onChange={handleHoneypotChange("email")}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+            <label htmlFor="phone_number">Phone</label>
+            <input
+              type="tel"
+              id="phone_number"
+              name="phone_number"
+              onChange={handleHoneypotChange("phone")}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+
           <div className="space-y-2">
             <label htmlFor="experience-content" className="sr-only">
               Your experience
@@ -121,7 +163,7 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
                 onBlur={handleBlur}
                 placeholder="Share your experience here... What happened? How did it make you feel? What did you learn?"
                 rows={5}
-                maxLength={MAX_LENGTH + 100} // Allow typing slightly over to show error
+                maxLength={MAX_LENGTH + 100}
                 disabled={isSubmitting}
                 aria-invalid={!!error}
                 aria-describedby={error ? "experience-error" : undefined}

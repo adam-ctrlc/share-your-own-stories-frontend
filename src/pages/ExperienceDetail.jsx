@@ -1,5 +1,8 @@
+import { useRef } from "react";
+import { useParams, Link } from "react-router-dom";
 import { toPng } from "html-to-image";
 import download from "downloadjs";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
   faSpinner,
@@ -8,48 +11,19 @@ import {
   faDownload,
   faLink,
 } from "@fortawesome/free-solid-svg-icons";
-
-import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock, faEye } from "@fortawesome/free-regular-svg-icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { experienceApi } from "@/common/libs/api";
+import { useExperience } from "@/common/hooks";
 import { formatRelativeTime } from "@/common/utils/formatters";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { Footer } from "@/components/Footer";
 
 export function ExperienceDetail() {
   const { id } = useParams();
-  const [experience, setExperience] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const lastFetchedId = useRef(null);
   const cardRef = useRef(null);
 
-  useEffect(() => {
-    async function fetchExperience() {
-      if (lastFetchedId.current === id) return;
-      lastFetchedId.current = id;
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await experienceApi.getById(id);
-        setExperience(result.data);
-      } catch (err) {
-        setError(err.message || "Failed to load experience");
-        lastFetchedId.current = null;
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    if (id) {
-      fetchExperience();
-    }
-  }, [id]);
+  const { experience, isLoading, error } = useExperience(id);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -105,8 +79,6 @@ export function ExperienceDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-animated flex flex-col">
-      <Toaster position="top-center" richColors />
-
       <header className="sticky top-0 z-50 glass border-b border-border/30">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
