@@ -28,6 +28,7 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
     }
     return "";
   });
+  const [website, setWebsite] = useState("");
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
 
@@ -66,8 +67,9 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
     }
 
     try {
-      await onSubmit(validation.data);
+      await onSubmit({ content: validation.data, website });
       setContent("");
+      setWebsite("");
       localStorage.removeItem(STORAGE_KEY);
       setError("");
       setTouched(false);
@@ -88,6 +90,24 @@ export function ExperienceForm({ onSubmit, isSubmitting = false }) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="website"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            style={{
+              opacity: 0,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: 0,
+              width: 0,
+              zIndex: -1,
+            }}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+          />
           <div className="space-y-2">
             <label htmlFor="experience-content" className="sr-only">
               Your experience

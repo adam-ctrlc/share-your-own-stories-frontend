@@ -68,10 +68,10 @@ export default function App() {
   }, []);
 
   // Handle form submission
-  const handleSubmit = async (content) => {
+  const handleSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const result = await experienceApi.create(content);
+      const result = await experienceApi.create(data);
 
       // Add new experience to the top of the list (only if sorted by latest)
       if (filters.sort === SORT_OPTIONS.LATEST && !filters.search) {

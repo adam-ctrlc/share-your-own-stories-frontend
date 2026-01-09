@@ -89,10 +89,10 @@ export const experienceApi = {
    * Create a new experience
    * @param {string} content - Experience content
    */
-  async create(content) {
+  async create({ content, website }) {
     return apiFetch("/experiences", {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, website }),
     });
   },
 };
