@@ -24,16 +24,14 @@ export function HomePage() {
 
   const { mutate } = useSWRConfig();
 
-  const { experiences, totalPages, isLoading, error, mutate: mutateList } = useExperiences({
-    page: 1,
-    limit: page * 20,
+  const { experiences, total, totalPages, isLoading, error, mutate: mutateList } = useExperiences({
+    page,
+    limit: 20,
     search: filters.search,
     sort: filters.sort,
   });
 
   const { create, isCreating } = useCreateExperience();
-
-  const hasMore = page < totalPages;
 
   const handleFilterChange = useCallback((newFilters) => {
     setFilters(newFilters);
@@ -43,6 +41,7 @@ export function HomePage() {
   const handleSubmit = async (data) => {
     try {
       await create(data);
+      setPage(1);
       mutateList();
       toast.success("Experience shared successfully!", {
         description: "Thank you for sharing your story.",
@@ -53,9 +52,10 @@ export function HomePage() {
     }
   };
 
-  const handleLoadMore = () => {
-    setPage((prev) => prev + 1);
-  };
+  const handlePageChange = useCallback((newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const handleRetry = () => {
     mutateList();
@@ -116,9 +116,10 @@ export function HomePage() {
               isLoading={isLoading}
               error={error}
               onRetry={handleRetry}
-              hasMore={hasMore}
-              onLoadMore={handleLoadMore}
-              isLoadingMore={false}
+              currentPage={page}
+              totalPages={totalPages}
+              total={total}
+              onPageChange={handlePageChange}
             />
           </section>
         </div>
